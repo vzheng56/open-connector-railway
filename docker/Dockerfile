@@ -25,7 +25,6 @@ COPY --from=build /app/catalog ./catalog
 COPY --from=build /app/dist ./dist
 
 RUN npm ci --omit=dev --ignore-scripts
-VOLUME ["/app/data"]
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD ["node", "scripts/healthcheck.ts"]
