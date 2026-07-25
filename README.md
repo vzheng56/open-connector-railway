@@ -201,6 +201,14 @@ Fly volume.
 See [docs/fly-io.md](docs/fly-io.md) for app creation, volume setup, secrets, deployment, custom
 domains, and scaling.
 
+## Railway Deployment
+
+The `railway` branch deploys OpenConnector with the production Docker runtime, a Railway volume for
+persistent SQLite storage, and a reusable marketplace template.
+
+See [docs/railway.md](docs/railway.md) for CLI deployment, secrets, health checks, template usage,
+and the workflow for syncing official changes through `main`.
+
 ## Docker Image (GHCR)
 
 Run OpenConnector from a prebuilt image on GitHub Packages (GHCR): `ghcr.io/oomol-lab/open-connector`. Use

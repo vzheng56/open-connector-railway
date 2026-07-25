@@ -180,6 +180,13 @@ OpenConnector 也可以部署到 Fly.io：使用 Node Docker runtime，并把 SQ
 
 Fly app 创建、volume、secret、部署、自定义域名和扩缩容步骤见 [fly-io.md](fly-io.md)。
 
+## Railway 部署
+
+`railway` 分支使用生产 Docker runtime 部署 OpenConnector，通过 Railway volume 持久化 SQLite
+数据，并可发布为复用模板。
+
+CLI 部署、secret、健康检查、模板使用以及通过 `main` 同步官方修改的流程见 [railway.md](railway.md)。
+
 ## Docker 镜像（GHCR）
 
 可以直接用 GitHub Packages（GHCR）上的预构建镜像运行 OpenConnector：`ghcr.io/oomol-lab/open-connector`。最新
@@ -209,6 +216,7 @@ HTTP API。
 - [Gmail OAuth 和 SDK 接入教程](gmail-oauth-sdk.zh-CN.md)
 - [Runtime API 和 MCP](runtime-api.md)
 - [Fly.io 部署](fly-io.md)
+- [Railway 部署](railway.md)
 - [Cloudflare 部署](cloudflare.md)
 - [Docker 镜像（GHCR）](docker-ghcr.zh-CN.md)
 - [配置项](configuration.md)
