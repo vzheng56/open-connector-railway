@@ -35,7 +35,7 @@ remain on the attached volume across normal redeployments.
   `railway`.
 - A Railway volume mounted at `/app/data`.
 - `PORT=3000`, `HOST=0.0.0.0`, and `OOMOL_CONNECT_DATA_DIR=/app/data`.
-- Independent generated values for `OOMOL_CONNECT_ENCRYPTION_KEY`,
+- Independent secret values supplied during deployment for `OOMOL_CONNECT_ENCRYPTION_KEY`,
   `OOMOL_CONNECT_ADMIN_TOKEN`, and `OOMOL_CONNECT_RUNTIME_TOKEN`.
 - A Railway public domain used as `OOMOL_CONNECT_ORIGIN`.
 
@@ -44,6 +44,10 @@ remain on the attached volume across normal redeployments.
 Open the generated Railway domain to access the web console. Use the administrator token when the
 console asks for authentication. Create scoped runtime tokens from the Access page for agents and
 applications instead of broadly sharing the bootstrap token.
+
+The deployment form asks for all eight runtime variables. Generate each secret independently, for
+example with `openssl rand -base64 32`, and store a secure external copy of the encryption key. The
+template does not copy secret values from its source project.
 
 For OAuth2 providers, set `OOMOL_CONNECT_ORIGIN` to the generated HTTPS domain without a trailing
 slash. The callback URL registered with provider OAuth applications is then:

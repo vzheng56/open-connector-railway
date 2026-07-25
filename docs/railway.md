@@ -5,6 +5,8 @@ volume for its SQLite database and transit files.
 
 For a preconfigured deployment, use the published
 [OpenConnector Railway template](https://railway.com/deploy/open-connector-railway).
+The template creates the service and volume, then asks for the runtime variables and independent
+secret values during deployment.
 
 ## Prerequisites
 
