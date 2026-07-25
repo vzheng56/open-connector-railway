@@ -1,7 +1,7 @@
 import type { AppData, ProviderDefinition, RunLog } from "./model";
 
 import { describe, expect, it } from "vitest";
-import { createOverviewSummary, resolveProviderConnectionStatus, sortProviders } from "./model";
+import { buildActionExamples, createOverviewSummary, resolveProviderConnectionStatus, sortProviders } from "./model";
 
 function provider(service: string, displayName: string): ProviderDefinition {
   return {
@@ -232,6 +232,30 @@ describe("resolveProviderConnectionStatus", () => {
     );
 
     expect(status.connections.map((connection) => connection.connectionName)).toEqual(["work"]);
+  });
+});
+
+describe("buildActionExamples", () => {
+  it("uses the deployed public origin in curl and TypeScript examples", () => {
+    const examples = buildActionExamples(
+      {
+        ...action("example.echo", true),
+        inputSchema: {
+          type: "object",
+          properties: { message: { type: "string" } },
+          required: ["message"],
+        },
+        outputSchema: { type: "object" },
+      },
+      "https://open-connector-production-3209.up.railway.app/",
+    );
+
+    expect(examples.curl).toContain("https://open-connector-production-3209.up.railway.app/v1/actions/example.echo");
+    expect(examples.typescript).toContain(
+      "https://open-connector-production-3209.up.railway.app/v1/actions/example.echo",
+    );
+    expect(examples.curl).not.toContain("localhost:3000");
+    expect(examples.typescript).not.toContain("localhost:3000");
   });
 });
 

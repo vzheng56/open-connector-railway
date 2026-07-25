@@ -60,6 +60,7 @@ import { decodeRunLogCursor } from "./storage/runtime-store.ts";
  */
 export interface IConnectServerOptions {
   catalog: CatalogStore;
+  publicOrigin: string;
   providerLoader: IProviderLoader;
   connections: ConnectionService;
   oauthClientConfigs: OAuthClientConfigService;
@@ -338,6 +339,7 @@ export class ConnectServer {
       const policy = (await this.getPolicySnapshot(context)).evaluate(action);
       return context.text(
         renderActionMarkdown(action, {
+          publicOrigin: this.options.publicOrigin,
           connection: await this.options.connections.getConnectionSummary(action.service, readConnectionName(context)),
           providerPermissions: action.providerPermissions,
           policy,
@@ -682,6 +684,7 @@ export class ConnectServer {
     });
     const server = createMcpServer({
       catalog: this.options.catalog,
+      publicOrigin: this.options.publicOrigin,
       providerLoader: this.options.providerLoader,
       connections: this.options.connections,
       actions: this.options.actions,

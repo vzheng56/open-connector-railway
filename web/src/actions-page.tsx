@@ -243,7 +243,10 @@ function ActionDetail(props: ActionDetailProps): ReactNode {
     };
   }, [actionId]);
 
-  const examples = useMemo(() => (fullAction ? buildActionExamples(fullAction) : null), [fullAction]);
+  const examples = useMemo(
+    () => (fullAction ? buildActionExamples(fullAction, window.location.origin) : null),
+    [fullAction],
+  );
 
   return (
     <>

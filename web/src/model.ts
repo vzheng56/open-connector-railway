@@ -448,17 +448,21 @@ export function parameterSummaries(
   }));
 }
 
-export function buildActionExamples(action: FullActionDefinition): { curl: string; typescript: string } {
+export function buildActionExamples(
+  action: FullActionDefinition,
+  publicOrigin: string,
+): { curl: string; typescript: string } {
   const body = { input: JSON.parse(exampleInput(action.inputSchema)) as unknown };
   const bodyText = JSON.stringify(body, null, 2);
+  const origin = publicOrigin.replace(/\/+$/, "");
   return {
     curl: [
-      `curl -s http://localhost:3000/v1/actions/${action.id} \\`,
+      `curl -s ${origin}/v1/actions/${action.id} \\`,
       "  -H 'content-type: application/json' \\",
       `  -d '${JSON.stringify(body)}'`,
     ].join("\n"),
     typescript: [
-      `const response = await fetch("http://localhost:3000/v1/actions/${action.id}", {`,
+      `const response = await fetch("${origin}/v1/actions/${action.id}", {`,
       `  method: "POST",`,
       `  headers: { "content-type": "application/json" },`,
       `  body: JSON.stringify(${bodyText}),`,

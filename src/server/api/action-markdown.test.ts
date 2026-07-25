@@ -15,8 +15,20 @@ const action: ActionDefinition = {
 };
 
 describe("renderActionMarkdown", () => {
+  it("uses the configured public origin in execution examples", () => {
+    const markdown = renderActionMarkdown(action, {
+      publicOrigin: "https://open-connector-production-3209.up.railway.app/",
+    });
+
+    expect(markdown).toContain(
+      "https://open-connector-production-3209.up.railway.app/v1/actions/github.delete_repository",
+    );
+    expect(markdown).not.toContain("localhost:3000");
+  });
+
   it("renders the current execution policy decision and decisive rule", () => {
     const markdown = renderActionMarkdown(action, {
+      publicOrigin: "http://localhost:3000",
       policy: {
         allowed: false,
         code: "action_blocked",

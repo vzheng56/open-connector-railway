@@ -8,20 +8,22 @@ import { gfmFromMarkdown, gfmToMarkdown } from "mdast-util-gfm";
 import { toMarkdown } from "mdast-util-to-markdown";
 import { gfm } from "micromark-extension-gfm";
 
-export type ActionMarkdownContext = {
+export interface ActionMarkdownContext {
+  publicOrigin: string;
   connection?: ConnectionSummary;
   providerPermissions?: string[];
   policy?: ActionPolicyDecision;
-};
+}
 
 /**
  * Render a compact action guide for coding agents and humans who want the raw
  * local HTTP contract without browsing the full catalog JSON.
  */
-export function renderActionMarkdown(action: ActionDefinition, context: ActionMarkdownContext = {}): string {
+export function renderActionMarkdown(action: ActionDefinition, context: ActionMarkdownContext): string {
   const exampleInput = buildExampleInput(action.inputSchema);
   const exampleBody = JSON.stringify({ input: exampleInput }, null, 2);
   const providerPermissions = context.providerPermissions ?? action.providerPermissions;
+  const publicOrigin = context.publicOrigin.replace(/\/+$/, "");
   const root: Root = {
     type: "root",
     children: [
@@ -31,7 +33,7 @@ export function renderActionMarkdown(action: ActionDefinition, context: ActionMa
       code(
         "bash",
         [
-          `curl -s http://localhost:3000/v1/actions/${action.id} \\`,
+          `curl -s ${publicOrigin}/v1/actions/${action.id} \\`,
           "  -H 'content-type: application/json' \\",
           `  -d '${JSON.stringify({ input: exampleInput })}'`,
         ].join("\n"),
@@ -39,7 +41,7 @@ export function renderActionMarkdown(action: ActionDefinition, context: ActionMa
       code(
         "ts",
         [
-          `const response = await fetch("http://localhost:3000/v1/actions/${action.id}", {`,
+          `const response = await fetch("${publicOrigin}/v1/actions/${action.id}", {`,
           `  method: "POST",`,
           `  headers: { "content-type": "application/json" },`,
           `  body: JSON.stringify(${indentMultiline(exampleBody, 2)}),`,
@@ -59,7 +61,7 @@ export function renderActionMarkdown(action: ActionDefinition, context: ActionMa
       ...describeConnection(context.connection),
       heading(2, "Notes For Agents"),
       list([
-        textParagraph("Use the local runtime endpoint above; do not call provider APIs directly unless the user asks."),
+        textParagraph("Use this runtime endpoint; do not call provider APIs directly unless the user asks."),
         paragraph(["Send JSON with a top-level ", inlineCode("input"), " object."]),
         textParagraph("Check the current connection and provider scopes before choosing actions on the user's behalf."),
         textParagraph(

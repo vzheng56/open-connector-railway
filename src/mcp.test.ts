@@ -206,6 +206,9 @@ describe("MCP server", () => {
               profile: secondaryCredential.profile,
             },
           },
+          markdown: expect.stringContaining(
+            "https://open-connector-production-3209.up.railway.app/v1/actions/example_auth.get_account",
+          ),
         },
       });
       expect(result.structuredContent).toMatchObject({
@@ -499,6 +502,7 @@ async function withMcpClient(
   });
   const server = createMcpServer({
     catalog,
+    publicOrigin: "https://open-connector-production-3209.up.railway.app",
     providerLoader,
     connections,
     actions,
@@ -543,7 +547,13 @@ async function withAuthenticatedMcpClient(
     ]),
   });
   const actions = new ActionRunner({ catalog, providerLoader, connections, runs });
-  const server = createMcpServer({ catalog, providerLoader, connections, actions });
+  const server = createMcpServer({
+    catalog,
+    publicOrigin: "https://open-connector-production-3209.up.railway.app",
+    providerLoader,
+    connections,
+    actions,
+  });
   const client = new Client({ name: "mcp-test", version: "0.0.0" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
 

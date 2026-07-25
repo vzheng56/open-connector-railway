@@ -20,6 +20,7 @@ import { renderActionMarkdown } from "./server/api/action-markdown.ts";
  */
 export interface IMcpServerOptions {
   catalog: CatalogStore;
+  publicOrigin: string;
   providerLoader: IProviderLoader;
   connections: ConnectionService;
   actions: ActionRunner;
@@ -387,8 +388,14 @@ async function describeActionMarkdownContext(
   action: RuntimeActionDefinition,
   connectionName?: string,
   policy?: ActionPolicySnapshot,
-): Promise<{ connection?: ConnectionSummary; providerPermissions: string[]; policy: ActionPolicyDecision }> {
+): Promise<{
+  publicOrigin: string;
+  connection?: ConnectionSummary;
+  providerPermissions: string[];
+  policy: ActionPolicyDecision;
+}> {
   return {
+    publicOrigin: options.publicOrigin,
     connection: await getSelectedConnectionSummary(options, action.service, connectionName),
     providerPermissions: action.providerPermissions,
     policy: (policy ?? (await getPolicySnapshot(options))).evaluate(action),

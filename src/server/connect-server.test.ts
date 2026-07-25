@@ -1803,6 +1803,25 @@ describe("ConnectServer", () => {
     expect(markdown).toContain("`messages:read`");
   });
 
+  it("renders agent guide examples with the configured public origin", async () => {
+    const app = createTestServer(
+      [
+        {
+          ...apiKeyProvider,
+          actions: [echoAction],
+        },
+      ],
+      { publicOrigin: "https://open-connector-production-3209.up.railway.app" },
+    ).createApp();
+
+    const response = await app.request("/api/actions/example.echo/agent.md");
+
+    expect(response.status).toBe(200);
+    expect(await response.text()).toContain(
+      "https://open-connector-production-3209.up.railway.app/v1/actions/example.echo",
+    );
+  });
+
   it("returns connection errors for action agent.md instead of 500", async () => {
     const app = createTestServer([
       {
@@ -2924,6 +2943,7 @@ interface CreateTestServerOptions {
   actionPolicy?: ActionPolicyService;
   actionSearch?: ActionSearchIndexProvider;
   providerLoader?: IProviderLoader;
+  publicOrigin?: string;
   logger?: Logger;
   idempotency?: IIdempotencyStore;
   runtimeTokens?: RuntimeTokenService;
@@ -2948,7 +2968,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
   });
   const clientConfigs = new OAuthClientConfigService({
     catalog,
-    origin: "http://localhost:3000",
+    origin: options.publicOrigin ?? "http://localhost:3000",
     store: new MemoryOAuthClientConfigStore(),
   });
   const transitFiles =
@@ -2973,6 +2993,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
 
   return new ConnectServer({
     catalog,
+    publicOrigin: options.publicOrigin ?? "http://localhost:3000",
     providerLoader,
     connections,
     oauthClientConfigs: clientConfigs,
