@@ -143,10 +143,11 @@ Expected: one volume attached to `open-connector` at `/app/data`.
 
 - [ ] **Step 3: Set non-secret variables and generated secrets**
 
-Set `NODE_ENV=production`, `HOST=0.0.0.0`, and `OOMOL_CONNECT_DATA_DIR=/app/data` with
-`--skip-deploys`. Generate 32-byte random values with `openssl rand -base64 32` and pipe them to
-`railway variable set ... --stdin --skip-deploys` for `OOMOL_CONNECT_ENCRYPTION_KEY`,
-`OOMOL_CONNECT_ADMIN_TOKEN`, and `OOMOL_CONNECT_RUNTIME_TOKEN`. Do not print the values.
+Set `NODE_ENV=production`, `PORT=3000`, `HOST=0.0.0.0`, and
+`OOMOL_CONNECT_DATA_DIR=/app/data` with `--skip-deploys`. Generate 32-byte random values with
+`openssl rand -base64 32` and pipe them to `railway variable set ... --stdin --skip-deploys` for
+`OOMOL_CONNECT_ENCRYPTION_KEY`, `OOMOL_CONNECT_ADMIN_TOKEN`, and
+`OOMOL_CONNECT_RUNTIME_TOKEN`. Do not print the values.
 
 - [ ] **Step 4: Upload and deploy**
 

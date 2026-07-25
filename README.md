@@ -206,6 +206,9 @@ domains, and scaling.
 The `railway` branch deploys OpenConnector with the production Docker runtime, a Railway volume for
 persistent SQLite storage, and a reusable marketplace template.
 
+Use the [OpenConnector Railway template](https://railway.com/deploy/open-connector-railway) for a
+preconfigured deployment.
+
 See [docs/railway.md](docs/railway.md) for CLI deployment, secrets, health checks, template usage,
 and the workflow for syncing official changes through `main`.
 

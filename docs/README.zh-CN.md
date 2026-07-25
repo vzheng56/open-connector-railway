@@ -185,6 +185,8 @@ Fly app 创建、volume、secret、部署、自定义域名和扩缩容步骤见
 `railway` 分支使用生产 Docker runtime 部署 OpenConnector，通过 Railway volume 持久化 SQLite
 数据，并可发布为复用模板。
 
+可以通过 [OpenConnector Railway 模板](https://railway.com/deploy/open-connector-railway)快速创建预配置部署。
+
 CLI 部署、secret、健康检查、模板使用以及通过 `main` 同步官方修改的流程见 [railway.md](railway.md)。
 
 ## Docker 镜像（GHCR）

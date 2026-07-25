@@ -3,6 +3,9 @@
 OpenConnector can run on Railway using the repository's production Docker image and a persistent
 volume for its SQLite database and transit files.
 
+For a preconfigured deployment, use the published
+[OpenConnector Railway template](https://railway.com/deploy/open-connector-railway).
+
 ## Prerequisites
 
 - A Railway account and the [Railway CLI](https://docs.railway.com/guides/cli) installed.
@@ -39,6 +42,7 @@ Set the non-secret runtime variables:
 
 ```bash
 railway variable set NODE_ENV=production --skip-deploys
+railway variable set PORT=3000 --skip-deploys
 railway variable set HOST=0.0.0.0 --skip-deploys
 railway variable set OOMOL_CONNECT_DATA_DIR=/app/data --skip-deploys
 ```

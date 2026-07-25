@@ -36,12 +36,14 @@ writes from multiple replicas.
 The deployment defines these non-secret values:
 
 - `HOST=0.0.0.0`
+- `PORT=3000`
 - `OOMOL_CONNECT_DATA_DIR=/app/data`
 - `NODE_ENV=production`
 
-Railway supplies `PORT`. The deployed project receives generated values for
-`OOMOL_CONNECT_ENCRYPTION_KEY`, `OOMOL_CONNECT_ADMIN_TOKEN`, and
-`OOMOL_CONNECT_RUNTIME_TOKEN`. Secret values are set through Railway and never committed.
+The fixed port matches the public Railway domain target and the production Docker image. The
+deployed project receives generated values for `OOMOL_CONNECT_ENCRYPTION_KEY`,
+`OOMOL_CONNECT_ADMIN_TOKEN`, and `OOMOL_CONNECT_RUNTIME_TOKEN`. Secret values are set through
+Railway and never committed.
 
 After Railway assigns a public domain, `OOMOL_CONNECT_ORIGIN` is set to its HTTPS origin so OAuth
 callback URLs use the public service address.
