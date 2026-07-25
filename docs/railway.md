@@ -26,7 +26,8 @@ SQLite deployment to one replica.
 Attach a Railway volume at the path used by the Docker image:
 
 ```bash
-railway volume add --service open-connector --mount-path /app/data
+railway service link open-connector
+railway volume add --mount-path /app/data
 ```
 
 The volume stores `/app/data/connect.sqlite` and temporary transit files. Keep one service replica

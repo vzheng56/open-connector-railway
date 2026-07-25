@@ -135,7 +135,8 @@ Expected: a linked project and an `open-connector` service in the production env
 Run:
 
 ```bash
-railway volume add --service open-connector --mount-path /app/data --json
+railway service link open-connector
+railway volume add --mount-path /app/data --json
 ```
 
 Expected: one volume attached to `open-connector` at `/app/data`.
