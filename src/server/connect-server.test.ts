@@ -345,6 +345,12 @@ describe("ConnectServer", () => {
     }).createApp();
 
     expect((await app.request("/health")).status).toBe(200);
+    const runtimeHealth = await app.request("/v1/health");
+    expect(runtimeHealth.status).toBe(200);
+    await expect(runtimeHealth.json()).resolves.toMatchObject({
+      success: true,
+      data: { ok: true, runtime: "oomol-connect" },
+    });
 
     const unauthorized = await app.request("/api/providers/example");
     expect(unauthorized.status).toBe(401);
