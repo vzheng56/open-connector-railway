@@ -21,6 +21,8 @@
     "generate:catalog": "node scripts/generate-catalog.ts",
     "generate:provider": "node scripts/generate-provider.ts",
     "runtime:data": "node scripts/runtime-data.ts",
+    "backup:now": "node scripts/backup-sqlite-r2-now.ts",
+    "backup:restore": "node scripts/restore-sqlite-r2-backup.ts",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
     "format": "oxfmt --check .",
@@ -29,6 +31,7 @@
     "fix-check": "npm run fix && npm run typecheck"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1115.0",
     "@cfworker/json-schema": "^4.1.1",
     "@hono/node-server": "^2.0.6",
     "@modelcontextprotocol/sdk": "^1.29.0",

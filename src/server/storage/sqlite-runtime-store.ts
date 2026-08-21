@@ -16,7 +16,7 @@ import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage, RunLogWriteResu
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
 import { readFileSync, readdirSync } from "node:fs";
-import { DatabaseSync } from "node:sqlite";
+import { backup, DatabaseSync } from "node:sqlite";
 import { parseRuntimeActionHttpResult } from "../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
 import { DEFAULT_RUN_LIMIT, decodeRunLogCursor, encodeRunLogCursor } from "./runtime-store.ts";
@@ -88,6 +88,10 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
 
   close(): void {
     this.database.close();
+  }
+
+  async backupTo(filename: string): Promise<number> {
+    return await backup(this.database, filename);
   }
 
   async rotateSecretCodec(nextSecretCodec: ISecretCodec): Promise<void> {

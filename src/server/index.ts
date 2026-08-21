@@ -8,6 +8,11 @@ import { ProviderLoader } from "../providers/provider-loader.ts";
 import { executableActionIds, executorModules } from "../providers/registry.generated.ts";
 import { createRuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
+import {
+  createR2BackupObjectStore,
+  readSqliteBackupConfig,
+  startSqliteBackupScheduler,
+} from "./backup/sqlite-r2-backup.ts";
 import { createConnectApp } from "./connect-app.ts";
 import { TransitFileService } from "./files/transit-files.ts";
 import { logger } from "./logger.ts";
@@ -49,6 +54,18 @@ const runtimeDatabase = new SqliteRuntimeDatabase(join(dataDir, "connect.sqlite"
   secretCodec,
   runLimit,
 });
+const backupConfig = readSqliteBackupConfig();
+const backupScheduler = backupConfig
+  ? startSqliteBackupScheduler({
+      config: backupConfig,
+      createSnapshot: async (filename) => {
+        await runtimeDatabase.backupTo(filename);
+      },
+      objectStore: createR2BackupObjectStore(backupConfig),
+      workingDirectory: join(dataDir, "backup-work"),
+      logger,
+    })
+  : undefined;
 const transitFiles = new TransitFileService({
   rootDir: join(dataDir, "files"),
   publicOrigin,
@@ -72,10 +89,12 @@ const { app, runtimeAuthConfigured } = await createConnectApp({
 });
 
 process.once("SIGINT", () => {
+  backupScheduler?.stop();
   runtimeDatabase.close();
   process.exit(0);
 });
 process.once("SIGTERM", () => {
+  backupScheduler?.stop();
   runtimeDatabase.close();
   process.exit(0);
 });
@@ -89,6 +108,7 @@ serve(
   (info) => {
     logger.info({ url: `http://${hostname}:${info.port}` }, "connect server listening");
     logger.info({ dataDir }, "runtime data directory");
+    logger.info({ enabled: Boolean(backupScheduler) }, "encrypted SQLite backup scheduler configured");
     if (!adminToken) {
       logger.warn("local admin authentication is disabled; set OOMOL_CONNECT_ADMIN_TOKEN to require bearer tokens");
     }
