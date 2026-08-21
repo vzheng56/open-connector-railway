@@ -20,7 +20,7 @@ import { compress } from "hono/compress";
 import { ConnectionError, defaultConnectionName } from "../connection-service.ts";
 import { ActionPolicyService, emptyPolicyRules } from "../core/action-policy.ts";
 import { DEFAULT_ACTION_SEARCH_LIMIT, createActionSearchIndexProvider, searchActions } from "../core/action-search.ts";
-import { optionalRecord, optionalString, requiredString } from "../core/cast.ts";
+import { optionalRecord, optionalString, requiredString, requiredStringArray } from "../core/cast.ts";
 import { createMcpServer, listMcpToolSummaries } from "../mcp.ts";
 import { OAuthClientConfigError, OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { createOAuthCompletionRedirectUrl } from "../oauth/oauth-completion-redirect.ts";
@@ -816,6 +816,10 @@ export class ConnectServer {
         connectionName,
         completionRedirect: optionalString(body.completionRedirect),
         completionState: optionalString(body.completionState),
+        scopes:
+          body.scopes === undefined
+            ? undefined
+            : requiredStringArray(body.scopes, "scopes", (message) => new OAuthFlowError("invalid_input", message)),
       });
       const authorizationUrl = new URL(authorization.authorizationUrl);
       this.options.logger?.info(

@@ -199,6 +199,38 @@ describe("OAuthFlowService", () => {
     });
   });
 
+  it("allows callers to request only an approved subset of provider scopes", async () => {
+    const services = createServices([oauthProvider]);
+    await services.clientConfigs.upsertConfig({
+      service: "example",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      extra: { tenant: "default" },
+    });
+
+    const started = await services.flow.startAuthorization({
+      service: "example",
+      scopes: ["read"],
+    });
+
+    expect(new URL(started.authorizationUrl).searchParams.get("scope")).toBe("read");
+    expect(await services.states.take(started.state)).toMatchObject({ scopes: ["read"] });
+  });
+
+  it("rejects OAuth scopes outside the provider allowlist", async () => {
+    const services = createServices([oauthProvider]);
+    await services.clientConfigs.upsertConfig({
+      service: "example",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      extra: { tenant: "default" },
+    });
+
+    await expect(
+      services.flow.startAuthorization({ service: "example", scopes: ["admin"] }),
+    ).rejects.toMatchObject({ code: "invalid_scope" });
+  });
+
   it("requires OAuth client config before authorization", async () => {
     const services = createServices([oauthProvider]);
 

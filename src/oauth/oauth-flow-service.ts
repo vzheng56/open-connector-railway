@@ -18,6 +18,7 @@ export interface OAuthAuthorizationStartInput {
   connectionName?: string;
   completionRedirect?: string;
   completionState?: string;
+  scopes?: string[];
 }
 
 export interface OAuthAuthorizationCompleteInput {
@@ -36,6 +37,7 @@ export type OAuthAuthorizationState = {
   pkceCodeVerifier?: string;
   completionRedirect?: string;
   completionState?: string;
+  scopes?: string[];
 };
 
 export interface OAuthAuthorizationComplete {
@@ -87,6 +89,7 @@ export class OAuthFlowService {
     if (!config) {
       throw new OAuthFlowError("oauth_client_config_required", `Configure an OAuth client for ${service} first.`);
     }
+    const scopes = resolveRequestedScopes(input.scopes, auth.scopes);
 
     const state = crypto.randomUUID();
     const pkceCodeVerifier = auth.pkce ? createPkceCodeVerifier() : undefined;
@@ -99,6 +102,7 @@ export class OAuthFlowService {
     };
     if (completionRedirect) pending.completionRedirect = completionRedirect;
     if (completionState) pending.completionState = completionState;
+    if (input.scopes) pending.scopes = scopes;
     await this.states.set(pending);
 
     const authorizationUrl = new URL(this.clientConfigs.resolveEndpointUrl(service, auth.authorizationUrl, config));
@@ -114,10 +118,10 @@ export class OAuthFlowService {
     );
     setAuthorizationParam(authorizationUrl, auth.authorizationRequestFields?.responseType, "response_type", "code");
     setAuthorizationParam(authorizationUrl, auth.authorizationRequestFields?.state, "state", state);
-    if (auth.scopes.length > 0 && auth.authorizationRequestFields?.scope !== false) {
+    if (scopes.length > 0 && auth.authorizationRequestFields?.scope !== false) {
       authorizationUrl.searchParams.set(
         auth.authorizationRequestFields?.scope ?? "scope",
-        auth.scopes.join(auth.scopeSeparator ?? " "),
+        scopes.join(auth.scopeSeparator ?? " "),
       );
     }
     if (pkceCodeVerifier) {
@@ -181,6 +185,22 @@ export class OAuthFlowService {
     if (pending.completionState) completed.completionState = pending.completionState;
     return completed;
   }
+}
+
+function resolveRequestedScopes(requested: string[] | undefined, allowed: string[]): string[] {
+  if (requested === undefined) {
+    return [...allowed];
+  }
+  const scopes = [...new Set(requested.map((scope) => scope.trim()))];
+  if (scopes.length === 0 || scopes.some((scope) => scope.length === 0)) {
+    throw new OAuthFlowError("invalid_scope", "scopes must contain at least one non-empty value.");
+  }
+  const allowedScopes = new Set(allowed);
+  const unsupported = scopes.filter((scope) => !allowedScopes.has(scope));
+  if (unsupported.length > 0) {
+    throw new OAuthFlowError("invalid_scope", `Requested OAuth scope is not permitted: ${unsupported[0]}`);
+  }
+  return scopes;
 }
 
 function setAuthorizationParam(
