@@ -2,6 +2,7 @@ import type { ConnectionService } from "../connection-service.ts";
 import type { OAuthClientConfigService } from "./oauth-client-config-service.ts";
 
 import { createHash, randomBytes } from "node:crypto";
+import { validateOAuthCompletionRedirect } from "./oauth-completion-redirect.ts";
 import { requestAuthorizationCodeToken } from "./oauth-token.ts";
 
 /**
@@ -15,6 +16,8 @@ export type OAuthAuthorizationStart = {
 export interface OAuthAuthorizationStartInput {
   service: string;
   connectionName?: string;
+  completionRedirect?: string;
+  completionState?: string;
 }
 
 export interface OAuthAuthorizationCompleteInput {
@@ -31,7 +34,16 @@ export type OAuthAuthorizationState = {
   state: string;
   createdAt: string;
   pkceCodeVerifier?: string;
+  completionRedirect?: string;
+  completionState?: string;
 };
+
+export interface OAuthAuthorizationComplete {
+  service: string;
+  connected: true;
+  completionRedirect?: string;
+  completionState?: string;
+}
 
 /**
  * Storage contract for pending OAuth authorization states.
@@ -63,7 +75,12 @@ export class OAuthFlowService {
   }
 
   async startAuthorization(input: OAuthAuthorizationStartInput): Promise<OAuthAuthorizationStart> {
-    const { service, connectionName } = input;
+    const { service, connectionName, completionRedirect, completionState } = input;
+    try {
+      validateOAuthCompletionRedirect({ completionRedirect, completionState });
+    } catch (error) {
+      throw new OAuthFlowError("invalid_completion_redirect", (error as Error).message);
+    }
     this.connections.assertProviderAvailable(service);
     const auth = this.clientConfigs.getOAuthDefinition(service);
     const config = await this.clientConfigs.getConfig(service);
@@ -73,13 +90,16 @@ export class OAuthFlowService {
 
     const state = crypto.randomUUID();
     const pkceCodeVerifier = auth.pkce ? createPkceCodeVerifier() : undefined;
-    await this.states.set({
+    const pending: OAuthAuthorizationState = {
       service,
       connectionName,
       state,
       createdAt: new Date().toISOString(),
       pkceCodeVerifier,
-    });
+    };
+    if (completionRedirect) pending.completionRedirect = completionRedirect;
+    if (completionState) pending.completionState = completionState;
+    await this.states.set(pending);
 
     const authorizationUrl = new URL(this.clientConfigs.resolveEndpointUrl(service, auth.authorizationUrl, config));
     for (const [key, value] of Object.entries(auth.authorizationParams ?? {})) {
@@ -111,7 +131,7 @@ export class OAuthFlowService {
     };
   }
 
-  async completeAuthorization(input: OAuthAuthorizationCompleteInput): Promise<{ service: string; connected: true }> {
+  async completeAuthorization(input: OAuthAuthorizationCompleteInput): Promise<OAuthAuthorizationComplete> {
     const pending = await this.states.take(input.state);
     if (!pending) {
       throw new OAuthFlowError("invalid_oauth_state", "OAuth state is missing or expired.");
@@ -153,10 +173,13 @@ export class OAuthFlowService {
     };
 
     await this.connections.setOAuthCredential(pending.service, oauthCredential, pending.connectionName);
-    return {
+    const completed: OAuthAuthorizationComplete = {
       service: pending.service,
       connected: true,
     };
+    if (pending.completionRedirect) completed.completionRedirect = pending.completionRedirect;
+    if (pending.completionState) completed.completionState = pending.completionState;
+    return completed;
   }
 }
 

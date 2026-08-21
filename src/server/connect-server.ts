@@ -23,6 +23,7 @@ import { DEFAULT_ACTION_SEARCH_LIMIT, createActionSearchIndexProvider, searchAct
 import { optionalRecord, optionalString, requiredString } from "../core/cast.ts";
 import { createMcpServer, listMcpToolSummaries } from "../mcp.ts";
 import { OAuthClientConfigError, OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
+import { createOAuthCompletionRedirectUrl } from "../oauth/oauth-completion-redirect.ts";
 import { OAuthFlowError, OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import {
   ActionInputDepthError,
@@ -810,7 +811,12 @@ export class ConnectServer {
       };
       this.options.logger?.info(logContext, "oauth authorization started");
 
-      const authorization = await this.options.oauthFlow.startAuthorization({ service, connectionName });
+      const authorization = await this.options.oauthFlow.startAuthorization({
+        service,
+        connectionName,
+        completionRedirect: optionalString(body.completionRedirect),
+        completionState: optionalString(body.completionState),
+      });
       const authorizationUrl = new URL(authorization.authorizationUrl);
       this.options.logger?.info(
         {
@@ -958,8 +964,13 @@ export class ConnectServer {
     }
 
     let service: string;
+    let completionRedirect: string | undefined;
+    let completionState: string | undefined;
     try {
-      service = (await this.options.oauthFlow.completeAuthorization({ state, code })).service;
+      const completed = await this.options.oauthFlow.completeAuthorization({ state, code });
+      service = completed.service;
+      completionRedirect = completed.completionRedirect;
+      completionState = completed.completionState;
       this.options.logger?.info(
         {
           ...logContext,
@@ -981,6 +992,9 @@ export class ConnectServer {
       throw error;
     }
 
+    if (completionRedirect && completionState) {
+      return context.redirect(createOAuthCompletionRedirectUrl({ completionRedirect, completionState, service }), 302);
+    }
     return context.html(renderOAuthCompletionPage(service));
   }
 

@@ -1026,6 +1026,45 @@ describe("ConnectServer", () => {
     ]);
   });
 
+  it("redirects to the allowlisted Tikpal callback only after OAuth completes", async () => {
+    const app = createTestServer([oauthProvider]).createApp();
+    await app.request("/api/oauth/configs/oauth_example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        clientId: "client-id",
+        clientSecret: "client-secret",
+        secretExtra: { appBearerToken: "app-token" },
+      }),
+    });
+    const authorization = await app.request("/api/oauth/authorizations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        service: "oauth_example",
+        connectionName: "opaque-connection",
+        completionRedirect: "tikpal://inbox/oauth",
+        completionState: "abcdefghijklmnop",
+      }),
+    });
+    const { state } = (await authorization.json()) as { state: string };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ access_token: "access-token", token_type: "Bearer" })),
+    );
+
+    const callback = await app.request(`/oauth/callback?state=${state}&code=example-code`);
+
+    expect(callback.status).toBe(302);
+    expect(callback.headers.get("location")).toBe(
+      "tikpal://inbox/oauth?status=connected&provider=oauth_example&state=abcdefghijklmnop",
+    );
+    const connections = await app.request("/api/connections");
+    await expect(connections.json()).resolves.toMatchObject([
+      { service: "oauth_example", connectionName: "opaque-connection", configured: true },
+    ]);
+  });
+
   it("keeps the console shell public while protecting admin APIs", async () => {
     const staticRoot = await createTestStaticRoot();
     try {
