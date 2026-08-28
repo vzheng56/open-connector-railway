@@ -14,7 +14,11 @@ export const provider: ProviderDefinition = {
       type: "oauth2",
       authorizationUrl: "https://todoist.com/oauth/authorize",
       tokenUrl: "https://todoist.com/oauth/access_token",
-      scopes: ["todoist.read", "todoist.write"],
+      // Todoist's OAuth endpoint accepts provider scopes, while the runtime
+      // exposes the stable logical scopes `todoist.read`/`todoist.write` after
+      // credential validation. `data:read_write` is the least provider scope
+      // that covers the V1 project/task read-write contract.
+      scopes: ["data:read_write"],
       scopeSeparator: ",",
       tokenEndpointAuthMethod: "client_secret_post",
     },
