@@ -15,6 +15,7 @@ import {
   resolveReplyHeaders,
   summarizeGmailMessage,
 } from "./message.ts";
+import { gmailReadonlyScope, gmailModifyScope } from "./scopes.ts";
 
 const gmailApiBaseUrl = "https://gmail.googleapis.com/gmail/v1";
 const detailHydrationBatchSize = 10;
@@ -198,6 +199,21 @@ export const executors: ProviderExecutors = defineProviderExecutors<ActionContex
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher }) {
+    const scopes = typeof input.metadata?.scope === "string" ? input.metadata.scope.split(/\s+/).filter(Boolean) : [];
+    // The OAuth exchange already established the credential. Gmail getProfile
+    // requires mailbox access, so it cannot validate a send-only connection.
+    if (
+      !scopes.some((scope) =>
+        [
+          gmailReadonlyScope,
+          gmailModifyScope,
+          "https://mail.google.com/",
+          "https://www.googleapis.com/auth/gmail.metadata",
+        ].includes(scope),
+      )
+    ) {
+      return { grantedScopes: scopes };
+    }
     const profile = await getProfile("me", input.accessToken, fetcher);
     return {
       profile: {
